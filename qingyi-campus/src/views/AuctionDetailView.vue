@@ -58,7 +58,7 @@
               />
             </div>
           </div>
-          <img v-else src="/placeholder.png" class="main-image" alt="商品图片" />
+          <img v-else src="/placeholder.svg" class="main-image" alt="商品图片" />
         </div>
 
         <div class="product-info">
@@ -468,7 +468,7 @@ let refreshTimer: any = null // 实时刷新定时器
 
 // 当前图片
 const currentImage = computed(() => {
-  return product.value?.images?.[currentImageIndex.value] || '/placeholder.png'
+  return product.value?.images?.[currentImageIndex.value] || '/placeholder.svg'
 })
 
 // 当前价格

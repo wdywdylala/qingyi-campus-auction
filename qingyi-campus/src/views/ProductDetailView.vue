@@ -58,7 +58,7 @@
               />
             </div>
           </div>
-          <img v-else src="/placeholder.png" class="main-image" alt="商品图片" />
+          <img v-else src="/placeholder.svg" class="main-image" alt="商品图片" />
         </div>
 
         <div class="product-info">
@@ -372,7 +372,7 @@ const flyingStartY = ref(0)
 
 // 拍卖倒计时
 const currentImage = computed(() => {
-  return product.value?.images?.[currentImageIndex.value] || '/placeholder.png'
+  return product.value?.images?.[currentImageIndex.value] || '/placeholder.svg'
 })
 
 const currentPrice = computed(() => {
