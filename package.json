@@ -2,10 +2,6 @@
   "name": "qingyi-campus-auction",
   "version": "1.0.0",
   "private": true,
-  "scripts": {
-    "build": "cd qingyi-campus && npm install && npm run build",
-    "dev": "cd qingyi-campus && npm run dev"
-  },
   "dependencies": {
     "tdesign-icons-vue-next": "^0.4.1"
   }
