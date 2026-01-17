@@ -339,11 +339,12 @@ const selectCategory = (category: string) => {
   selectedCategory.value = category
 
   // 如果该分类之前没有推荐过（首次访问），则自动加载
-  if (recommendedProductIds.value[category].size === 0) {
+  const categoryCache = categoryProductCache.value[category]
+  if (categoryCache && categoryCache.length === 0 && recommendedProductIds.value[category]?.size === 0) {
     loadFeaturedProducts()
   } else {
     // 如果已经推荐过，从缓存中恢复已推荐的商品
-    featuredProducts.value = categoryProductCache.value[category]
+    featuredProducts.value = categoryCache || []
   }
 }
 
@@ -383,7 +384,8 @@ const loadFeaturedProducts = async () => {
 
   // 过滤掉已经推荐过的商品
   const availableProducts = data.filter((product: any) => {
-    return !recommendedProductIds.value[selectedCategory.value].has(product.id)
+    const productIds = recommendedProductIds.value[selectedCategory.value]
+    return productIds ? !productIds.has(product.id) : true
   })
 
   if (availableProducts.length === 0) {
@@ -408,7 +410,10 @@ const loadFeaturedProducts = async () => {
   for (let i = 0; i < productsToRecommend; i++) {
     recommended.push(shuffled[i])
     // 记录已推荐的商品ID
-    recommendedProductIds.value[selectedCategory.value].add(shuffled[i].id)
+    const productIds = recommendedProductIds.value[selectedCategory.value]
+    if (productIds) {
+      productIds.add(shuffled[i].id)
+    }
   }
 
   featuredProducts.value = recommended.map((product: any) => ({

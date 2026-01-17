@@ -42,7 +42,7 @@
                   v-for="(img, index) in product.images"
                   :key="index"
                   :class="{ active: index === currentImageIndex }"
-                  @click="currentImageIndex = index"
+                  @click="currentImageIndex = Number(index)"
                   class="carousel-dot"
                 ></span>
               </div>
@@ -53,7 +53,7 @@
                 :key="index"
                 :src="img"
                 :class="{ active: index === currentImageIndex }"
-                @click="currentImageIndex = index"
+                @click="currentImageIndex = Number(index)"
                 class="thumbnail"
               />
             </div>
@@ -1157,7 +1157,7 @@ const refreshAuctionData = async () => {
     if (auctionError) {
       console.error('刷新拍卖数据失败:', auctionError)
       // 如果是404或400错误，可能是拍卖已被删除，停止刷新
-      if (auctionError.code === 'PGRST116' || auctionError.status === 400) {
+      if (auctionError.code === 'PGRST116') {
         console.warn('拍卖可能不存在，停止刷新')
       }
       return

@@ -42,7 +42,7 @@
                   v-for="(img, index) in product.images"
                   :key="index"
                   :class="{ active: index === currentImageIndex }"
-                  @click="currentImageIndex = index"
+                  @click="currentImageIndex = Number(index)"
                   class="carousel-dot"
                 ></span>
               </div>
@@ -53,7 +53,7 @@
                 :key="index"
                 :src="img"
                 :class="{ active: index === currentImageIndex }"
-                @click="currentImageIndex = index"
+                @click="currentImageIndex = Number(index)"
                 class="thumbnail"
               />
             </div>
@@ -336,7 +336,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, h } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { MessagePlugin, DialogPlugin } from 'tdesign-vue-next'
 import { supabase } from '@/utils/supabase'
@@ -699,37 +699,33 @@ const buyNow = async () => {
 const placeBid = async () => {
   if (!isLoggedIn.value || !product.value?.id) return
 
+  const bidAmount = ref(product.value.auction?.current_price || product.value.price)
+
   const dialog = DialogPlugin({
     header: '出价',
-    body: () => {
-      const bidAmount = ref(product.value.auction?.current_price || product.value.price)
-      
-      const dialogBody = document.createElement('div')
-      dialogBody.innerHTML = `
-        <div style="padding: 20px;">
-          <p>当前价格: ¥${product.value.auction?.current_price || product.value.price}</p>
-          <p>出价金额:</p>
-          <input id="bid-amount" type="number" min="${bidAmount.value}" step="10" value="${bidAmount.value}" style="width: 100%; padding: 8px; font-size: 16px;" />
-          <p style="color: #999; font-size: 12px;">提示: 出价后不可撤销，请谨慎出价</p>
-        </div>
-      `
-      
-      setTimeout(() => {
-        const input = document.getElementById('bid-amount') as HTMLInputElement
-        input?.addEventListener('change', (e) => {
-          bidAmount.value = Number((e.target as HTMLInputElement).value)
-        })
-      }, 100)
-      
-      return dialogBody
-    },
+    body: () => h('div', { style: 'padding: 20px;' }, [
+      h('p', {}, `当前价格: ¥${product.value.auction?.current_price || product.value.price}`),
+      h('p', {}, '出价金额:'),
+      h('input', {
+        id: 'bid-amount',
+        type: 'number',
+        min: bidAmount.value,
+        step: '10',
+        value: bidAmount.value,
+        style: 'width: 100%; padding: 8px; font-size: 16px;',
+        onInput: (e: Event) => {
+          const target = e.target as HTMLInputElement
+          bidAmount.value = Number(target.value)
+        }
+      }),
+      h('p', { style: 'color: #999; font-size: 12px;' }, '提示: 出价后不可撤销，请谨慎出价')
+    ]),
     confirmBtn: {
       content: '确认出价',
       theme: 'danger',
       onClick: async () => {
-        const input = document.getElementById('bid-amount') as HTMLInputElement
-        const amount = Number(input.value)
-        
+        const amount = bidAmount.value
+
         if (amount < (product.value.auction?.current_price || product.value.price)) {
           MessagePlugin.error('出价金额不能低于当前价')
           return false
@@ -949,14 +945,19 @@ const loadMoreComments = async () => {
 
 const updateCountdown = () => {
   if (!product.value?.auction?.end_time) return
-  
-  setInterval(() => {
-    if (!product.value?.auction?.end_time) return
+
+  let countdownTimer: any = null
+  countdownTimer = setInterval(() => {
+    if (!product.value?.auction?.end_time) {
+      clearInterval(countdownTimer)
+      return
+    }
     const end = new Date(product.value.auction.end_time)
     const now = new Date()
     if (end <= now) {
       // 拍卖结束，重新加载商品信息
       loadProduct()
+      clearInterval(countdownTimer)
     }
   }, 1000)
 }
@@ -977,6 +978,32 @@ const formatDateTime = (date: string) => {
     hour: '2-digit',
     minute: '2-digit'
   })
+}
+
+// 错误信息处理辅助函数
+const getErrorMessage = (err: any, defaultMessage: string): string => {
+  if (!err) return defaultMessage
+
+  if (err.message) {
+    // 解析英文错误信息，转换为中文提示
+    if (err.message.includes('invalid input syntax')) {
+      return '数据格式错误'
+    } else if (err.message.includes('integer')) {
+      return '数据类型错误'
+    } else if (err.message.includes('duplicate key')) {
+      return '数据已存在'
+    } else if (err.message.includes('foreign key')) {
+      return '关联数据无效'
+    } else if (err.message.includes('null')) {
+      return '必填项缺失'
+    } else if (err.message.includes('permission')) {
+      return '权限不足'
+    } else {
+      return err.message
+    }
+  }
+
+  return defaultMessage
 }
 </script>
 
